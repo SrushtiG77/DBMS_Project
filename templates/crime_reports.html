@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Crime Reports - Crime Report System{% endblock %}
+{% block header_title %}Crime Reports Management{% endblock %}
+
+{% block content %}
+{% if session.role == 'Police' %}
+<!-- Add New Report Form -->
+<div class="card bg-dark text-white border-0 shadow-sm mb-4 border-start border-primary border-4">
+    <div class="card-header bg-transparent border-0 pt-4 pb-0">
+        <h5 class="fw-bold"><i class="fas fa-plus-circle text-primary me-2"></i> File New Crime Report</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('crime_reports') }}" method="POST">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-gray">Report Title</label>
+                    <input type="text" class="form-control bg-black border-secondary text-white custom-input" name="title" required placeholder="e.g. Theft at Main St">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-gray">Location</label>
+                    <input type="text" class="form-control bg-black border-secondary text-white custom-input" name="location" required placeholder="e.g. 123 Main St">
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-gray">Description</label>
+                    <textarea class="form-control bg-black border-secondary text-white custom-input" name="description" rows="3" required placeholder="Detailed description of the incident..."></textarea>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow">Submit Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Reports List -->
+<div class="card bg-dark text-white border-0 shadow-lg">
+    <div class="card-header bg-dark-blue border-bottom border-secondary py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list-alt text-primary me-2"></i> All Reports</h5>
+        {% if session.role == 'Citizen' %}
+            <span class="badge bg-secondary p-2">Read Only Mode</span>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 custom-table">
+                <thead class="text-gray">
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Date Reported</th>
+                        {% if session.role == 'Police' %}
+                        <th>Action</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td class="text-primary fw-bold">#{{ report.id }}</td>
+                        <td><a href="#" onclick="showCrimeDetails({ report_id }); return false;" class="text-decoration-none text-info fw-semibold">{{ report.title }}</a></td>
+                        <td><small class="text-gray">{{ report.description[:50] }}{% if report.description|length > 50 %}...{% endif %}</small></td>
+                        <td><i class="fas fa-map-marker-alt text-danger me-1"></i> {{ report.location }}</td>
+                        <td>{{ report.date_reported.strftime('%Y-%m-%d %H:%M') if report.date_reported else 'N/A' }}</td>
+                        {% if session.role == 'Police' %}
+                        <td>
+                            <form action="{{ url_for('delete_crime', id=report.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{% if session.role == 'Police' %}6{% else %}5{% endif %}" class="text-center py-4 text-gray">No crime reports found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

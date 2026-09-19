@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Criminal Records - Crime Report System{% endblock %}
+{% block header_title %}Criminal Database{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Add Criminal Form -->
+    {% if session.role == 'Police' %}
+    <div class="col-lg-4">
+        <div class="card bg-dark text-white border-0 shadow-sm border-top border-danger border-4">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="fw-bold"><i class="fas fa-user-plus text-danger me-2"></i> Register Criminal</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('criminal_records') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-gray">Full Name</label>
+                        <input type="text" class="form-control bg-black border-secondary text-white custom-input" name="name" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-gray">Age</label>
+                            <input type="number" class="form-control bg-black border-secondary text-white custom-input" name="age" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-gray">Gender</label>
+                            <select class="form-select bg-black border-secondary text-white custom-input" name="gender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-gray">Crime Committed</label>
+                        <input type="text" class="form-control bg-black border-secondary text-white custom-input" name="crime_committed" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-gray">Arrest Date</label>
+                        <input type="date" class="form-control bg-black border-secondary text-white custom-input" name="arrest_date" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 fw-bold shadow">Save Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Criminal Directory -->
+    <div class="{% if session.role == 'Police' %}col-lg-8{% else %}col-12{% endif %}">
+        <div class="card bg-dark text-white border-0 shadow-lg h-100">
+            <div class="card-header bg-dark-blue border-bottom border-secondary py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-address-book text-danger me-2"></i> Directory</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive h-100">
+                    <table class="table table-dark table-hover mb-0 custom-table">
+                        <thead class="text-gray sticky-top bg-dark-blue">
+                            <tr>
+                                <th># ID</th>
+                                <th>Name & Demographics</th>
+                                <th>Crime</th>
+                                <th>Arrest Date</th>
+                                {% if session.role == 'Police' %}
+                                <th>Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr>
+                                <td class="text-danger fw-bold">CR-{{ record.id }}</td>
+                                <td>
+                                    <a href="#" onclick="showCriminalDetails({ record_id }); return false;" class="text-decoration-none">
+                                        <div class="fw-bold text-info hover-lift d-inline-block">{{ record.name }}</div>
+                                    </a>
+                                    <br>
+                                    <small class="text-gray">{{ record.age }} y/o, {{ record.gender }}</small>
+                                </td>
+                                <td class="text-warning">{{ record.crime_committed }}</td>
+                                <td>{{ record.arrest_date }}</td>
+                                {% if session.role == 'Police' %}
+                                <td>
+                                    <form action="{{ url_for('delete_criminal', id=record.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this criminal record?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Record"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="{% if session.role == 'Police' %}5{% else %}4{% endif %}" class="text-center py-5 text-gray">
+                                    <i class="fas fa-folder-open fs-2 mb-3 mt-2 d-block opacity-50"></i>
+                                    No records found in database.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

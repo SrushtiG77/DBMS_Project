@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Crime Report System{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray">
+
+    {% if session.logged_in %}
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark-blue sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading text-white fw-bold py-4 px-3 fs-4 border-bottom border-secondary">
+                <i class="fas fa-shield-alt text-primary-light"></i> CRMS
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-gray fw-semibold transition-nav">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+                <a href="{{ url_for('crime_reports') }}" class="list-group-item list-group-item-action bg-transparent text-gray fw-semibold transition-nav">
+                    <i class="fas fa-file-alt me-2"></i>Crime Reports
+                </a>
+                <a href="{{ url_for('criminal_records') }}" class="list-group-item list-group-item-action bg-transparent text-gray fw-semibold transition-nav">
+                    <i class="fas fa-users me-2"></i>Criminal Records
+                </a>
+                <a href="{{ url_for('case_assignments') }}" class="list-group-item list-group-item-action bg-transparent text-gray fw-semibold transition-nav">
+                    <i class="fas fa-briefcase me-2"></i>Case Assignments
+                </a>
+                <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action bg-transparent text-danger fw-semibold mt-5 transition-nav">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-black py-4 px-4 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-align-left text-white fs-4 me-3" id="menu-toggle" style="cursor: pointer;"></i>
+                    <h2 class="fs-4 m-0 text-white">{% block header_title %}Overview{% endblock %}</h2>
+                </div>
+
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="text-gray me-3"><i class="fas fa-user-circle me-1"></i> {{ session.username }} ({{ session.role }})</span>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-5">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+        {% block login_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var el = document.getElementById("wrapper");
+        var toggleButton = document.getElementById("menu-toggle");
+
+        if(toggleButton){
+            toggleButton.onclick = function () {
+                el.classList.toggle("toggled");
+            };
+        }
+    </script>
+    <!-- Global Modals -->
+    <!-- Crime Details Modal -->
+    <div class="modal fade" id="crimeDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark-blue text-white border-secondary shadow-lg custom-glass-card" style="transition: transform 0.3s ease-out;">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-alt text-primary me-2"></i>Crime Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><span class="text-gray me-2">ID:</span><span id="mdlCrimeId" class="fw-bold text-primary"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Title:</span><span id="mdlCrimeTitle" class="fw-bold"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Location:</span><span id="mdlCrimeLocation" class="text-danger"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Date & Time:</span><span id="mdlCrimeDate"></span></div>
+                    <div class="mt-3">
+                        <span class="text-gray d-block mb-1">Description:</span>
+                        <div id="mdlCrimeDesc" class="p-3 bg-black rounded border border-secondary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Criminal Details Modal -->
+    <div class="modal fade" id="criminalDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark-blue text-white border-secondary shadow-lg custom-glass-card" style="transition: transform 0.3s ease-out;">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user text-danger me-2"></i>Criminal Record</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><span class="text-gray me-2">ID:</span><span id="mdlCriminalId" class="fw-bold text-danger"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Name:</span><span id="mdlCriminalName" class="fw-bold"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Age:</span><span id="mdlCriminalAge"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Crime Type:</span><span id="mdlCriminalCrime" class="text-warning"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Police Details Modal -->
+    <div class="modal fade" id="policeDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark-blue text-white border-secondary shadow-lg custom-glass-card" style="transition: transform 0.3s ease-out;">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt text-info me-2"></i>Police Officer Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><span class="text-gray me-2">ID:</span><span id="mdlPoliceId" class="fw-bold text-info"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Name:</span><span id="mdlPoliceName" class="fw-bold"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Post:</span><span id="mdlPolicePost"></span></div>
+                    <div class="mb-2"><span class="text-gray me-2">Specialization:</span><span id="mdlPoliceSpec" class="text-warning"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showCrimeDetails(id) {
+        fetch('/api/crime/' + id)
+            .then(response => response.json())
+            .then(data => {
+                if(!data.error) {
+                    document.getElementById('mdlCrimeId').innerText = "#" + data.id;
+                    document.getElementById('mdlCrimeTitle').innerText = data.title;
+                    document.getElementById('mdlCrimeLocation').innerText = data.location;
+                    document.getElementById('mdlCrimeDate').innerText = data.date_reported || 'N/A';
+                    document.getElementById('mdlCrimeDesc').innerText = data.description;
+                    new bootstrap.Modal(document.getElementById('crimeDetailModal')).show();
+                }
+            });
+    }
+
+    function showCriminalDetails(id) {
+        fetch('/api/criminal/' + id)
+            .then(response => response.json())
+            .then(data => {
+                if(!data.error) {
+                    document.getElementById('mdlCriminalId').innerText = "CR-" + data.id;
+                    document.getElementById('mdlCriminalName').innerText = data.name;
+                    document.getElementById('mdlCriminalAge').innerText = data.age;
+                    document.getElementById('mdlCriminalCrime').innerText = data.crime_committed;
+                    new bootstrap.Modal(document.getElementById('criminalDetailModal')).show();
+                }
+            });
+    }
+
+    function showPoliceDetails(id) {
+        if (!id) return;
+        fetch('/api/police/' + id)
+            .then(response => response.json())
+            .then(data => {
+                if(!data.error) {
+                    document.getElementById('mdlPoliceId').innerText = "#" + data.id;
+                    document.getElementById('mdlPoliceName').innerText = data.name;
+                    document.getElementById('mdlPolicePost').innerText = data.post || 'Inspector';
+                    document.getElementById('mdlPoliceSpec').innerText = data.specialization || 'General Crime';
+                    new bootstrap.Modal(document.getElementById('policeDetailModal')).show();
+                }
+            });
+    }
+    </script>
+</body>
+</html>
